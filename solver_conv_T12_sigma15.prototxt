@@ -1,0 +1,28 @@
+net: "../net/fw_T12_conv_64_d1.prototxt"
+test_iter: 5105
+# make test net, but don't invoke it from the solver itself
+test_interval: 670000
+display: 10
+average_loss: 10
+type: 'Adam'
+lr_policy: "multistep"
+# lr for unnormalized softmax -- see train_val definition
+base_lr: 0.001
+gamma: 0.1
+clip_gradients:0.1
+#stepvalue: 7500
+stepvalue: 37500
+stepvalue: 60000
+#stepsize: 8400
+#stepsize: 120000
+# high momentum
+momentum: 0.9
+# no gradient accumulation
+iter_size: 1
+max_iter: 352000
+weight_decay: 1e-4
+snapshot: 750
+snapshot_prefix: "../sv_Model/fw_deno_conv_T12/fw_deno_T12_conv64_sigma50_2"
+test_initialization: false
+#norm_factor: 100
+#regularization_type: "None"
