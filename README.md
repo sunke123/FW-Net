@@ -20,7 +20,7 @@ if it helps your research, please cite our paper:
 
     @article{fw-net,
       Author = {Ke Sun and Zhangyang Wang and Dong Liu and Runsheng Liu},
-      Journal = {arXiv preprint arXiv:1408.5093},
+      Journal = {CoRR},
       Title = {${L}_p$-{N}orm {C}onstrained {C}oding {W}ith {F}rank-{W}olfe {N}etwork},
       Year = {2018}
     }
