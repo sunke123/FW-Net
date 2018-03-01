@@ -16,6 +16,16 @@ If you have any question, please feel free to contact me.
 
 E-Mail: sunk@mail.ustc.edu.cn
 
+if it helps your research, please cite our paper:
+
+@misc{1802.10252,
+  author = {Ke Sun and Zhangyang Wang and Dong Liu and Runsheng Liu},
+  title = {${L}_p$-{N}orm {C}onstrained {C}oding {W}ith {F}rank-{W}olfe {N}etwork},
+  year = {2018},
+  eprint = {1802.10252},
+  note = {arXiv:1802.10252v1}
+}
+
 # Caffe
 
 [![Build Status](https://travis-ci.org/BVLC/caffe.svg?branch=master)](https://travis-ci.org/BVLC/caffe)
