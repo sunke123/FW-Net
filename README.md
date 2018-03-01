@@ -12,7 +12,7 @@ Our models are under the folder "pretrained model".
 You can check the details in our paper: (https://arxiv.org/abs/1802.10252)
 
 This code will be continually updated.
-If you have any questions, please feel free to contact me.
+If you have any question, please feel free to contact me.
 
 E-Mail: sunk@mail.ustc.edu.cn
 
