@@ -21,7 +21,7 @@ if it helps your research, please cite our paper:
     @article{fw-net,
       Author = {Ke Sun and Zhangyang Wang and Dong Liu and Runsheng Liu},
       Journal = {CoRR},
-      Title = {${L}_p$-{N}orm {C}onstrained {C}oding {W}ith {F}rank-{W}olfe {N}etwork},
+      Title = {L_p-Norm Constrained Coding With Frank-Wolfe Network},
       Year = {2018}
     }
 
