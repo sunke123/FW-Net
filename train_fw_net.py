@@ -24,7 +24,7 @@ def cal_PSNR(pred,gt):
     psnr = 10*np.log10(255.*255./mse)
     return psnr
 
-def test_valid(net):
+def test_valid(net,sigma):
     valid_img_path = '/data8/sunk/FW/deno_data/bsd68_noise_%d/' % sigma
     valid_gt_path = '/data8/sunk/FW/deno_data/bsd68_gt/'
     aver_psnr, loss = 0.0,0.0
@@ -69,7 +69,7 @@ def rand_crop(img,gt,crop_H,crop_W,x=-1,y=-1):
     return crop_Img,crop_gt
 
 # generate training data
-def genData(Data_Q,Label_Q,batchsize,crop_H,crop_W):
+def genData(Data_Q,Label_Q,batchsize,crop_H,crop_W,sigma):
     name_list = range(1,433)
     shuffle(name_list)
     data_L = np.zeros((batchsize,1,crop_H,crop_W))
@@ -78,7 +78,7 @@ def genData(Data_Q,Label_Q,batchsize,crop_H,crop_W):
     key = 0
     while True:
         if Data_Q.full() != True:
-            img = loadmat('/data8/sunk/FW/deno_data/BSD432_sgm_25/im%04d.mat' % name_list[key])['z']
+            img = loadmat('/data8/sunk/FW/deno_data/BSD432_sgm_%d/im%04d.mat' % (sigma,name_list[key]))['z']
             gt = loadmat('/data8/sunk/FW/deno_data/BSD432_gt/im%04d.mat' % name_list[key])['y']
             crop_img,crop_gt = rand_crop(img,gt,crop_H,crop_W)
             data_L[count,0,:,:] = crop_img
@@ -99,7 +99,7 @@ def train(args):
     Data_Q = Queue(50)
     Label_Q = Queue(50)
     pData = Process(target=genData, 
-                    args=(Data_Q,Label_Q,args.batchsize, args.crop_H,args.crop_W))
+                    args=(Data_Q,Label_Q,args.batchsize, args.crop_H,args.crop_W, args.sigma))
     pData.start()
 
     caffe.set_mode_gpu()
@@ -147,7 +147,7 @@ def train(args):
 
             # evaluated on validation or test set.
             if step % epoch_iters == 0:
-                psnr, aver_psnr, psnr_set5, psnr_set14 = test_valid(solver.net)
+                psnr, aver_psnr, psnr_set5, psnr_set14 = test_valid(solver.net,args.sigma)
                 if (aver_psnr > best_psnr):
                     best_psnr = aver_psnr
                     best_each_psnr = psnr
@@ -189,6 +189,8 @@ if __name__ == '__main__':
                            help='the width of training patch.')
     fw_parser.add_argument('--log', type=str, default='fw_train.log',
                            help='the path of log file.')
+    fw_parser.add_argument('--sgm', type=int, default=25,
+                           help='noise level: 15, 25 or 50.')
     fw_args = parser.parse_args()
 
     train(fw_args)
