@@ -1,7 +1,9 @@
 # FW-Net
 FW-Net for image denoising
 
-Note: We find one bug in our code. We will fix it asap. 
+
+Note: We find an error in our experimental settings, which results in an unfair comparison. We will fix it asap and provide new models.
+
 
 Our Configurations: CUDA-8.0, cudnn-v5, Python 2.7, GPU 1080Ti.
 
