@@ -1,6 +1,8 @@
 # FW-Net
 FW-Net for image denoising
 
+Note: We find one bug in our code. We will fix it asap. 
+
 Our Configurations: CUDA-8.0, cudnn-v5, Python 2.7, GPU 1080Ti.
 
 I trained these models on windows servers. I will release the DLLs of windows caffe asap.
