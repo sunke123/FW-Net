@@ -1,4 +1,4 @@
-net: "../net/fw_T12_conv_64_d1.prototxt"
+net: "../net/fw_T16_conv_64_d1.prototxt"
 test_iter: 5105
 # make test net, but don't invoke it from the solver itself
 test_interval: 670000
