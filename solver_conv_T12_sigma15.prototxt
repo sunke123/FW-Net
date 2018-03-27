@@ -22,7 +22,7 @@ iter_size: 1
 max_iter: 352000
 weight_decay: 1e-4
 snapshot: 750
-snapshot_prefix: "../sv_Model/fw_deno_conv_T12/fw_deno_T12_conv64_sigma50_2"
+snapshot_prefix: "../sv_Model/fw_deno_conv_T16/fw_deno_T16_conv64_sigma25"
 test_initialization: false
 #norm_factor: 100
 #regularization_type: "None"
