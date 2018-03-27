@@ -1,0 +1,1955 @@
+layer {
+  name: "label"
+  type: "Input"
+  top: "label"
+  input_param {
+    shape {
+      dim: 100
+      dim: 1
+      dim: 42
+      dim: 42
+    }
+  }
+}
+layer {
+  bottom: "label"
+  top: "data"
+  name: "add_noise"
+  type: "Noise"
+  noise_param {
+    filler_param {
+      type: "gaussian"
+      mean: 0
+    }
+    #std: 0.09803922 #sigma 25
+    #std: 0.058823 #sigma 15
+    std: 0.19607843 #sigma 50
+  }
+}
+layer {
+  name: "init_fc"
+  type: "Convolution"
+  bottom: "data"
+  top: "init_fc"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  convolution_param {
+    num_output: 64
+    kernel_size: 3
+    pad:1
+    stride: 1
+    bias_term: false
+    weight_filler {
+      type: "msra"
+      variance_norm: AVERAGE
+    }
+  }
+}
+layer {
+  name: "init_norm"
+  type: "ConvConjugateNorm"
+  bottom: "init_fc"
+  top: "init_norm"
+  param {
+    name: "p"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  conjugate_norm_param {
+    filler {
+      type: "constant"
+      value: 1.5
+    }
+    channel_shared: true
+    fc: false
+  }
+}
+layer {
+  name: "init_pool"
+  type: "HolderPool"
+  bottom: "init_norm"
+  top: "init_pool"
+  param {
+    name: "p"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  holder_pool_param {
+    filler {
+      type: "constant"
+      value: 1.5
+    }
+    channel_shared: true
+    d: 1
+    fc: false
+  }
+}
+layer {
+  name: "init_scale"
+  type: "SigScale"
+  bottom: "init_pool"
+  top: "init_scale"
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  sig_scale_param {
+    filler {
+      type: "constant"
+      value: 10.0
+    }
+    channel_shared: true
+    counterpart: false
+    fc: false
+  }
+}
+layer {
+  name: "fc_1"
+  type: "Convolution"
+  bottom: "init_scale"
+  top: "fc_1"
+  param {
+    #name: "fc_1"
+    lr_mult: 1
+    decay_mult: 1
+  }
+  convolution_param {
+    num_output: 64
+    kernel_size: 3
+    pad:1
+    stride: 1
+    bias_term: false
+    weight_filler {
+      type: "msra"
+      variance_norm: AVERAGE
+    }
+  }
+}
+layer {
+  name: "fuse_1_1"
+  type: "Eltwise"
+  bottom: "init_fc"
+  bottom: "fc_1"
+  top: "fuse_1_1"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "norm_1"
+  type: "ConvConjugateNorm"
+  bottom: "fuse_1_1"
+  top: "norm_1"
+  param {
+    name: "p"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  conjugate_norm_param {
+    filler {
+      type: "constant"
+      value: 1.5
+    }
+    channel_shared: true
+    fc: false
+  }
+}
+layer {
+  name: "pool_1"
+  type: "HolderPool"
+  bottom: "norm_1"
+  top: "pool_1"
+  param {
+    name: "p"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  holder_pool_param {
+    filler {
+      type: "constant"
+      value: 1.5
+    }
+    channel_shared: true
+    d: 1
+    fc: false
+  }
+}
+layer {
+  name: "scale_1"
+  type: "SigScale"
+  bottom: "pool_1"
+  top: "scale_1"
+  param {
+    name: "t_1"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  sig_scale_param {
+    filler {
+      type: "constant"
+      value: 0.69314718056
+    }
+    channel_shared: true
+    counterpart: false
+    fc: false
+  }
+}
+layer {
+  name: "scale_c_1"
+  type: "SigScale"
+  bottom: "init_scale"
+  top: "scale_c_1"
+  param {
+    name: "t_1"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  sig_scale_param {
+    filler {
+      type: "constant"
+      value: 0.69314718056
+    }
+    channel_shared: true
+    counterpart: true
+    fc: false
+  }
+}
+layer {
+  name: "fuse_2_1"
+  type: "Eltwise"
+  bottom: "scale_1"
+  bottom: "scale_c_1"
+  top: "fuse_2_1"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "fc_2"
+  type: "Convolution"
+  bottom: "fuse_2_1"
+  top: "fc_2"
+  param {
+    #name: "fc_1"
+    lr_mult: 1
+    decay_mult: 1
+  }
+  convolution_param {
+    num_output: 64
+    kernel_size: 3
+    pad:1
+    stride: 1
+    bias_term: false
+    weight_filler {
+      type: "msra"
+      variance_norm: AVERAGE
+    }
+  }
+}
+layer {
+  name: "fuse_1_2"
+  type: "Eltwise"
+  bottom: "init_fc"
+  bottom: "fc_2"
+  top: "fuse_1_2"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "norm_2"
+  type: "ConvConjugateNorm"
+  bottom: "fuse_1_2"
+  top: "norm_2"
+  param {
+    name: "p"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  conjugate_norm_param {
+    filler {
+      type: "constant"
+      value: 1.5
+    }
+    channel_shared: true
+    fc: false
+  }
+}
+layer {
+  name: "pool_2"
+  type: "HolderPool"
+  bottom: "norm_2"
+  top: "pool_2"
+  param {
+    name: "p"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  holder_pool_param {
+    filler {
+      type: "constant"
+      value: 1.5
+    }
+    channel_shared: true
+    d: 1
+    fc: false
+  }
+}
+layer {
+  name: "scale_2"
+  type: "SigScale"
+  bottom: "pool_2"
+  top: "scale_2"
+  param {
+    name: "t_2"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  sig_scale_param {
+    filler {
+      type: "constant"
+      value: -0.0
+    }
+    channel_shared: true
+    counterpart: false
+    fc: false
+  }
+}
+layer {
+  name: "scale_c_2"
+  type: "SigScale"
+  bottom: "fuse_2_1"
+  top: "scale_c_2"
+  param {
+    name: "t_2"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  sig_scale_param {
+    filler {
+      type: "constant"
+      value: -0.0
+    }
+    channel_shared: true
+    counterpart: true
+    fc: false
+  }
+}
+layer {
+  name: "fuse_2_2"
+  type: "Eltwise"
+  bottom: "scale_2"
+  bottom: "scale_c_2"
+  top: "fuse_2_2"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "fc_3"
+  type: "Convolution"
+  bottom: "fuse_2_2"
+  top: "fc_3"
+  param {
+    #name: "fc_1"
+    lr_mult: 1
+    decay_mult: 1
+  }
+  convolution_param {
+    num_output: 64
+    kernel_size: 3
+    pad:1
+    stride: 1
+    bias_term: false
+    weight_filler {
+      type: "msra"
+      variance_norm: AVERAGE
+    }
+  }
+}
+layer {
+  name: "fuse_1_3"
+  type: "Eltwise"
+  bottom: "init_fc"
+  bottom: "fc_3"
+  top: "fuse_1_3"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "norm_3"
+  type: "ConvConjugateNorm"
+  bottom: "fuse_1_3"
+  top: "norm_3"
+  param {
+    name: "p"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  conjugate_norm_param {
+    filler {
+      type: "constant"
+      value: 1.5
+    }
+    channel_shared: true
+    fc: false
+  }
+}
+layer {
+  name: "pool_3"
+  type: "HolderPool"
+  bottom: "norm_3"
+  top: "pool_3"
+  param {
+    name: "p"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  holder_pool_param {
+    filler {
+      type: "constant"
+      value: 1.5
+    }
+    channel_shared: true
+    d: 1
+    fc: false
+  }
+}
+layer {
+  name: "scale_3"
+  type: "SigScale"
+  bottom: "pool_3"
+  top: "scale_3"
+  param {
+    name: "t_3"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  sig_scale_param {
+    filler {
+      type: "constant"
+      value: -0.405465108108
+    }
+    channel_shared: true
+    counterpart: false
+    fc: false
+  }
+}
+layer {
+  name: "scale_c_3"
+  type: "SigScale"
+  bottom: "fuse_2_2"
+  top: "scale_c_3"
+  param {
+    name: "t_3"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  sig_scale_param {
+    filler {
+      type: "constant"
+      value: -0.405465108108
+    }
+    channel_shared: true
+    counterpart: true
+    fc: false
+  }
+}
+layer {
+  name: "fuse_2_3"
+  type: "Eltwise"
+  bottom: "scale_3"
+  bottom: "scale_c_3"
+  top: "fuse_2_3"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "fc_4"
+  type: "Convolution"
+  bottom: "fuse_2_3"
+  top: "fc_4"
+  param {
+    #name: "fc_1"
+    lr_mult: 1
+    decay_mult: 1
+  }
+  convolution_param {
+    num_output: 64
+    kernel_size: 3
+    pad:1
+    stride: 1
+    bias_term: false
+    weight_filler {
+      type: "msra"
+      variance_norm: AVERAGE
+    }
+  }
+}
+layer {
+  name: "fuse_1_4"
+  type: "Eltwise"
+  bottom: "init_fc"
+  bottom: "fc_4"
+  top: "fuse_1_4"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "norm_4"
+  type: "ConvConjugateNorm"
+  bottom: "fuse_1_4"
+  top: "norm_4"
+  param {
+    name: "p"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  conjugate_norm_param {
+    filler {
+      type: "constant"
+      value: 1.5
+    }
+    channel_shared: true
+    fc: false
+  }
+}
+layer {
+  name: "pool_4"
+  type: "HolderPool"
+  bottom: "norm_4"
+  top: "pool_4"
+  param {
+    name: "p"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  holder_pool_param {
+    filler {
+      type: "constant"
+      value: 1.5
+    }
+    channel_shared: true
+    d: 1
+    fc: false
+  }
+}
+layer {
+  name: "scale_4"
+  type: "SigScale"
+  bottom: "pool_4"
+  top: "scale_4"
+  param {
+    name: "t_4"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  sig_scale_param {
+    filler {
+      type: "constant"
+      value: -0.69314718056
+    }
+    channel_shared: true
+    counterpart: false
+    fc: false
+  }
+}
+layer {
+  name: "scale_c_4"
+  type: "SigScale"
+  bottom: "fuse_2_3"
+  top: "scale_c_4"
+  param {
+    name: "t_4"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  sig_scale_param {
+    filler {
+      type: "constant"
+      value: -0.69314718056
+    }
+    channel_shared: true
+    counterpart: true
+    fc: false
+  }
+}
+layer {
+  name: "fuse_2_4"
+  type: "Eltwise"
+  bottom: "scale_4"
+  bottom: "scale_c_4"
+  top: "fuse_2_4"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "fc_5"
+  type: "Convolution"
+  bottom: "fuse_2_4"
+  top: "fc_5"
+  param {
+    #name: "fc_1"
+    lr_mult: 1
+    decay_mult: 1
+  }
+  convolution_param {
+    num_output: 64
+    kernel_size: 3
+    pad:1
+    stride: 1
+    bias_term: false
+    weight_filler {
+      type: "msra"
+      variance_norm: AVERAGE
+    }
+  }
+}
+layer {
+  name: "fuse_1_5"
+  type: "Eltwise"
+  bottom: "init_fc"
+  bottom: "fc_5"
+  top: "fuse_1_5"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "norm_5"
+  type: "ConvConjugateNorm"
+  bottom: "fuse_1_5"
+  top: "norm_5"
+  param {
+    name: "p"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  conjugate_norm_param {
+    filler {
+      type: "constant"
+      value: 1.5
+    }
+    channel_shared: true
+    fc: false
+  }
+}
+layer {
+  name: "pool_5"
+  type: "HolderPool"
+  bottom: "norm_5"
+  top: "pool_5"
+  param {
+    name: "p"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  holder_pool_param {
+    filler {
+      type: "constant"
+      value: 1.5
+    }
+    channel_shared: true
+    d: 1
+    fc: false
+  }
+}
+layer {
+  name: "scale_5"
+  type: "SigScale"
+  bottom: "pool_5"
+  top: "scale_5"
+  param {
+    name: "t_5"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  sig_scale_param {
+    filler {
+      type: "constant"
+      value: -0.916290731874
+    }
+    channel_shared: true
+    counterpart: false
+    fc: false
+  }
+}
+layer {
+  name: "scale_c_5"
+  type: "SigScale"
+  bottom: "fuse_2_4"
+  top: "scale_c_5"
+  param {
+    name: "t_5"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  sig_scale_param {
+    filler {
+      type: "constant"
+      value: -0.916290731874
+    }
+    channel_shared: true
+    counterpart: true
+    fc: false
+  }
+}
+layer {
+  name: "fuse_2_5"
+  type: "Eltwise"
+  bottom: "scale_5"
+  bottom: "scale_c_5"
+  top: "fuse_2_5"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "fc_6"
+  type: "Convolution"
+  bottom: "fuse_2_5"
+  top: "fc_6"
+  param {
+    #name: "fc_1"
+    lr_mult: 1
+    decay_mult: 1
+  }
+  convolution_param {
+    num_output: 64
+    kernel_size: 3
+    pad:1
+    stride: 1
+    bias_term: false
+    weight_filler {
+      type: "msra"
+      variance_norm: AVERAGE
+    }
+  }
+}
+layer {
+  name: "fuse_1_6"
+  type: "Eltwise"
+  bottom: "init_fc"
+  bottom: "fc_6"
+  top: "fuse_1_6"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "norm_6"
+  type: "ConvConjugateNorm"
+  bottom: "fuse_1_6"
+  top: "norm_6"
+  param {
+    name: "p"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  conjugate_norm_param {
+    filler {
+      type: "constant"
+      value: 1.5
+    }
+    channel_shared: true
+    fc: false
+  }
+}
+layer {
+  name: "pool_6"
+  type: "HolderPool"
+  bottom: "norm_6"
+  top: "pool_6"
+  param {
+    name: "p"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  holder_pool_param {
+    filler {
+      type: "constant"
+      value: 1.5
+    }
+    channel_shared: true
+    d: 1
+    fc: false
+  }
+}
+layer {
+  name: "scale_6"
+  type: "SigScale"
+  bottom: "pool_6"
+  top: "scale_6"
+  param {
+    name: "t_6"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  sig_scale_param {
+    filler {
+      type: "constant"
+      value: -1.09861228867
+    }
+    channel_shared: true
+    counterpart: false
+    fc: false
+  }
+}
+layer {
+  name: "scale_c_6"
+  type: "SigScale"
+  bottom: "fuse_2_5"
+  top: "scale_c_6"
+  param {
+    name: "t_6"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  sig_scale_param {
+    filler {
+      type: "constant"
+      value: -1.09861228867
+    }
+    channel_shared: true
+    counterpart: true
+    fc: false
+  }
+}
+layer {
+  name: "fuse_2_6"
+  type: "Eltwise"
+  bottom: "scale_6"
+  bottom: "scale_c_6"
+  top: "fuse_2_6"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "fc_7"
+  type: "Convolution"
+  bottom: "fuse_2_6"
+  top: "fc_7"
+  param {
+    #name: "fc_1"
+    lr_mult: 1
+    decay_mult: 1
+  }
+  convolution_param {
+    num_output: 64
+    kernel_size: 3
+    pad:1
+    stride: 1
+    bias_term: false
+    weight_filler {
+      type: "msra"
+      variance_norm: AVERAGE
+    }
+  }
+}
+layer {
+  name: "fuse_1_7"
+  type: "Eltwise"
+  bottom: "init_fc"
+  bottom: "fc_7"
+  top: "fuse_1_7"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "norm_7"
+  type: "ConvConjugateNorm"
+  bottom: "fuse_1_7"
+  top: "norm_7"
+  param {
+    name: "p"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  conjugate_norm_param {
+    filler {
+      type: "constant"
+      value: 1.5
+    }
+    channel_shared: true
+    fc: false
+  }
+}
+layer {
+  name: "pool_7"
+  type: "HolderPool"
+  bottom: "norm_7"
+  top: "pool_7"
+  param {
+    name: "p"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  holder_pool_param {
+    filler {
+      type: "constant"
+      value: 1.5
+    }
+    channel_shared: true
+    d: 1
+    fc: false
+  }
+}
+layer {
+  name: "scale_7"
+  type: "SigScale"
+  bottom: "pool_7"
+  top: "scale_7"
+  param {
+    name: "t_7"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  sig_scale_param {
+    filler {
+      type: "constant"
+      value: -1.2527629685
+    }
+    channel_shared: true
+    counterpart: false
+    fc: false
+  }
+}
+layer {
+  name: "scale_c_7"
+  type: "SigScale"
+  bottom: "fuse_2_6"
+  top: "scale_c_7"
+  param {
+    name: "t_7"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  sig_scale_param {
+    filler {
+      type: "constant"
+      value: -1.2527629685
+    }
+    channel_shared: true
+    counterpart: true
+    fc: false
+  }
+}
+layer {
+  name: "fuse_2_7"
+  type: "Eltwise"
+  bottom: "scale_7"
+  bottom: "scale_c_7"
+  top: "fuse_2_7"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "fc_8"
+  type: "Convolution"
+  bottom: "fuse_2_7"
+  top: "fc_8"
+  param {
+    #name: "fc_1"
+    lr_mult: 1
+    decay_mult: 1
+  }
+  convolution_param {
+    num_output: 64
+    kernel_size: 3
+    pad:1
+    stride: 1
+    bias_term: false
+    weight_filler {
+      type: "msra"
+      variance_norm: AVERAGE
+    }
+  }
+}
+layer {
+  name: "fuse_1_8"
+  type: "Eltwise"
+  bottom: "init_fc"
+  bottom: "fc_8"
+  top: "fuse_1_8"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "norm_8"
+  type: "ConvConjugateNorm"
+  bottom: "fuse_1_8"
+  top: "norm_8"
+  param {
+    name: "p"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  conjugate_norm_param {
+    filler {
+      type: "constant"
+      value: 1.5
+    }
+    channel_shared: true
+    fc: false
+  }
+}
+layer {
+  name: "pool_8"
+  type: "HolderPool"
+  bottom: "norm_8"
+  top: "pool_8"
+  param {
+    name: "p"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  holder_pool_param {
+    filler {
+      type: "constant"
+      value: 1.5
+    }
+    channel_shared: true
+    d: 1
+    fc: false
+  }
+}
+layer {
+  name: "scale_8"
+  type: "SigScale"
+  bottom: "pool_8"
+  top: "scale_8"
+  param {
+    name: "t_8"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  sig_scale_param {
+    filler {
+      type: "constant"
+      value: -1.38629436112
+    }
+    channel_shared: true
+    counterpart: false
+    fc: false
+  }
+}
+layer {
+  name: "scale_c_8"
+  type: "SigScale"
+  bottom: "fuse_2_7"
+  top: "scale_c_8"
+  param {
+    name: "t_8"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  sig_scale_param {
+    filler {
+      type: "constant"
+      value: -1.38629436112
+    }
+    channel_shared: true
+    counterpart: true
+    fc: false
+  }
+}
+layer {
+  name: "fuse_2_8"
+  type: "Eltwise"
+  bottom: "scale_8"
+  bottom: "scale_c_8"
+  top: "fuse_2_8"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "fc_9"
+  type: "Convolution"
+  bottom: "fuse_2_8"
+  top: "fc_9"
+  param {
+    #name: "fc_1"
+    lr_mult: 1
+    decay_mult: 1
+  }
+  convolution_param {
+    num_output: 64
+    kernel_size: 3
+    pad:1
+    stride: 1
+    bias_term: false
+    weight_filler {
+      type: "msra"
+      variance_norm: AVERAGE
+    }
+  }
+}
+layer {
+  name: "fuse_1_9"
+  type: "Eltwise"
+  bottom: "init_fc"
+  bottom: "fc_9"
+  top: "fuse_1_9"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "norm_9"
+  type: "ConvConjugateNorm"
+  bottom: "fuse_1_9"
+  top: "norm_9"
+  param {
+    name: "p"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  conjugate_norm_param {
+    filler {
+      type: "constant"
+      value: 1.5
+    }
+    channel_shared: true
+    fc: false
+  }
+}
+layer {
+  name: "pool_9"
+  type: "HolderPool"
+  bottom: "norm_9"
+  top: "pool_9"
+  param {
+    name: "p"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  holder_pool_param {
+    filler {
+      type: "constant"
+      value: 1.5
+    }
+    channel_shared: true
+    d: 1
+    fc: false
+  }
+}
+layer {
+  name: "scale_9"
+  type: "SigScale"
+  bottom: "pool_9"
+  top: "scale_9"
+  param {
+    name: "t_9"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  sig_scale_param {
+    filler {
+      type: "constant"
+      value: -1.50407739678
+    }
+    channel_shared: true
+    counterpart: false
+    fc: false
+  }
+}
+layer {
+  name: "scale_c_9"
+  type: "SigScale"
+  bottom: "fuse_2_8"
+  top: "scale_c_9"
+  param {
+    name: "t_9"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  sig_scale_param {
+    filler {
+      type: "constant"
+      value: -1.50407739678
+    }
+    channel_shared: true
+    counterpart: true
+    fc: false
+  }
+}
+layer {
+  name: "fuse_2_9"
+  type: "Eltwise"
+  bottom: "scale_9"
+  bottom: "scale_c_9"
+  top: "fuse_2_9"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "fc_10"
+  type: "Convolution"
+  bottom: "fuse_2_9"
+  top: "fc_10"
+  param {
+    #name: "fc_1"
+    lr_mult: 1
+    decay_mult: 1
+  }
+  convolution_param {
+    num_output: 64
+    kernel_size: 3
+    pad:1
+    stride: 1
+    bias_term: false
+    weight_filler {
+      type: "msra"
+      variance_norm: AVERAGE
+    }
+  }
+}
+layer {
+  name: "fuse_1_10"
+  type: "Eltwise"
+  bottom: "init_fc"
+  bottom: "fc_10"
+  top: "fuse_1_10"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "norm_10"
+  type: "ConvConjugateNorm"
+  bottom: "fuse_1_10"
+  top: "norm_10"
+  param {
+    name: "p"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  conjugate_norm_param {
+    filler {
+      type: "constant"
+      value: 1.5
+    }
+    channel_shared: true
+    fc: false
+  }
+}
+layer {
+  name: "pool_10"
+  type: "HolderPool"
+  bottom: "norm_10"
+  top: "pool_10"
+  param {
+    name: "p"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  holder_pool_param {
+    filler {
+      type: "constant"
+      value: 1.5
+    }
+    channel_shared: true
+    d: 1
+    fc: false
+  }
+}
+layer {
+  name: "scale_10"
+  type: "SigScale"
+  bottom: "pool_10"
+  top: "scale_10"
+  param {
+    name: "t_10"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  sig_scale_param {
+    filler {
+      type: "constant"
+      value: -1.60943791243
+    }
+    channel_shared: true
+    counterpart: false
+    fc: false
+  }
+}
+layer {
+  name: "scale_c_10"
+  type: "SigScale"
+  bottom: "fuse_2_9"
+  top: "scale_c_10"
+  param {
+    name: "t_10"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  sig_scale_param {
+    filler {
+      type: "constant"
+      value: -1.60943791243
+    }
+    channel_shared: true
+    counterpart: true
+    fc: false
+  }
+}
+layer {
+  name: "fuse_2_10"
+  type: "Eltwise"
+  bottom: "scale_10"
+  bottom: "scale_c_10"
+  top: "fuse_2_10"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "fc_11"
+  type: "Convolution"
+  bottom: "fuse_2_10"
+  top: "fc_11"
+  param {
+    #name: "fc_1"
+    lr_mult: 1
+    decay_mult: 1
+  }
+  convolution_param {
+    num_output: 64
+    kernel_size: 3
+    pad:1
+    stride: 1
+    bias_term: false
+    weight_filler {
+      type: "msra"
+      variance_norm: AVERAGE
+    }
+  }
+}
+layer {
+  name: "fuse_1_11"
+  type: "Eltwise"
+  bottom: "init_fc"
+  bottom: "fc_11"
+  top: "fuse_1_11"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "norm_11"
+  type: "ConvConjugateNorm"
+  bottom: "fuse_1_11"
+  top: "norm_11"
+  param {
+    name: "p"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  conjugate_norm_param {
+    filler {
+      type: "constant"
+      value: 1.5
+    }
+    channel_shared: true
+    fc: false
+  }
+}
+layer {
+  name: "pool_11"
+  type: "HolderPool"
+  bottom: "norm_11"
+  top: "pool_11"
+  param {
+    name: "p"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  holder_pool_param {
+    filler {
+      type: "constant"
+      value: 1.5
+    }
+    channel_shared: true
+    d: 1
+    fc: false
+  }
+}
+layer {
+  name: "scale_11"
+  type: "SigScale"
+  bottom: "pool_11"
+  top: "scale_11"
+  param {
+    name: "t_11"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  sig_scale_param {
+    filler {
+      type: "constant"
+      value: -1.70474809224
+    }
+    channel_shared: true
+    counterpart: false
+    fc: false
+  }
+}
+layer {
+  name: "scale_c_11"
+  type: "SigScale"
+  bottom: "fuse_2_10"
+  top: "scale_c_11"
+  param {
+    name: "t_11"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  sig_scale_param {
+    filler {
+      type: "constant"
+      value: -1.70474809224
+    }
+    channel_shared: true
+    counterpart: true
+    fc: false
+  }
+}
+layer {
+  name: "fuse_2_11"
+  type: "Eltwise"
+  bottom: "scale_11"
+  bottom: "scale_c_11"
+  top: "fuse_2_11"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "fc_12"
+  type: "Convolution"
+  bottom: "fuse_2_11"
+  top: "fc_12"
+  param {
+    #name: "fc_1"
+    lr_mult: 1
+    decay_mult: 1
+  }
+  convolution_param {
+    num_output: 64
+    kernel_size: 3
+    pad:1
+    stride: 1
+    bias_term: false
+    weight_filler {
+      type: "msra"
+      variance_norm: AVERAGE
+    }
+  }
+}
+layer {
+  name: "fuse_1_12"
+  type: "Eltwise"
+  bottom: "init_fc"
+  bottom: "fc_12"
+  top: "fuse_1_12"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "norm_12"
+  type: "ConvConjugateNorm"
+  bottom: "fuse_1_12"
+  top: "norm_12"
+  param {
+    name: "p"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  conjugate_norm_param {
+    filler {
+      type: "constant"
+      value: 1.5
+    }
+    channel_shared: true
+    fc: false
+  }
+}
+layer {
+  name: "pool_12"
+  type: "HolderPool"
+  bottom: "norm_12"
+  top: "pool_12"
+  param {
+    name: "p"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  holder_pool_param {
+    filler {
+      type: "constant"
+      value: 1.5
+    }
+    channel_shared: true
+    d: 1
+    fc: false
+  }
+}
+layer {
+  name: "scale_12"
+  type: "SigScale"
+  bottom: "pool_12"
+  top: "scale_12"
+  param {
+    name: "t_12"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  sig_scale_param {
+    filler {
+      type: "constant"
+      value: -1.79175946923
+    }
+    channel_shared: true
+    counterpart: false
+    fc: false
+  }
+}
+layer {
+  name: "scale_c_12"
+  type: "SigScale"
+  bottom: "fuse_2_11"
+  top: "scale_c_12"
+  param {
+    name: "t_12"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  sig_scale_param {
+    filler {
+      type: "constant"
+      value: -1.79175946923
+    }
+    channel_shared: true
+    counterpart: true
+    fc: false
+  }
+}
+layer {
+  name: "fuse_2_12"
+  type: "Eltwise"
+  bottom: "scale_12"
+  bottom: "scale_c_12"
+  top: "fuse_2_12"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "fc_13"
+  type: "Convolution"
+  bottom: "fuse_2_12"
+  top: "fc_13"
+  param {
+    #name: "fc_1"
+    lr_mult: 1
+    decay_mult: 1
+  }
+  convolution_param {
+    num_output: 64
+    kernel_size: 3
+    pad:1
+    stride: 1
+    bias_term: false
+    weight_filler {
+      type: "msra"
+      variance_norm: AVERAGE
+    }
+  }
+}
+layer {
+  name: "fuse_1_13"
+  type: "Eltwise"
+  bottom: "init_fc"
+  bottom: "fc_13"
+  top: "fuse_1_13"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "norm_13"
+  type: "ConvConjugateNorm"
+  bottom: "fuse_1_13"
+  top: "norm_13"
+  param {
+    name: "p"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  conjugate_norm_param {
+    filler {
+      type: "constant"
+      value: 1.5
+    }
+    channel_shared: true
+    fc: false
+  }
+}
+layer {
+  name: "pool_13"
+  type: "HolderPool"
+  bottom: "norm_13"
+  top: "pool_13"
+  param {
+    name: "p"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  holder_pool_param {
+    filler {
+      type: "constant"
+      value: 1.5
+    }
+    channel_shared: true
+    d: 1
+    fc: false
+  }
+}
+layer {
+  name: "scale_13"
+  type: "SigScale"
+  bottom: "pool_13"
+  top: "scale_13"
+  param {
+    name: "t_13"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  sig_scale_param {
+    filler {
+      type: "constant"
+      value: -1.8718021769
+    }
+    channel_shared: true
+    counterpart: false
+    fc: false
+  }
+}
+layer {
+  name: "scale_c_13"
+  type: "SigScale"
+  bottom: "fuse_2_12"
+  top: "scale_c_13"
+  param {
+    name: "t_13"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  sig_scale_param {
+    filler {
+      type: "constant"
+      value: -1.8718021769
+    }
+    channel_shared: true
+    counterpart: true
+    fc: false
+  }
+}
+layer {
+  name: "fuse_2_13"
+  type: "Eltwise"
+  bottom: "scale_13"
+  bottom: "scale_c_13"
+  top: "fuse_2_13"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "fc_14"
+  type: "Convolution"
+  bottom: "fuse_2_13"
+  top: "fc_14"
+  param {
+    #name: "fc_1"
+    lr_mult: 1
+    decay_mult: 1
+  }
+  convolution_param {
+    num_output: 64
+    kernel_size: 3
+    pad:1
+    stride: 1
+    bias_term: false
+    weight_filler {
+      type: "msra"
+      variance_norm: AVERAGE
+    }
+  }
+}
+layer {
+  name: "fuse_1_14"
+  type: "Eltwise"
+  bottom: "init_fc"
+  bottom: "fc_14"
+  top: "fuse_1_14"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "norm_14"
+  type: "ConvConjugateNorm"
+  bottom: "fuse_1_14"
+  top: "norm_14"
+  param {
+    name: "p"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  conjugate_norm_param {
+    filler {
+      type: "constant"
+      value: 1.5
+    }
+    channel_shared: true
+    fc: false
+  }
+}
+layer {
+  name: "pool_14"
+  type: "HolderPool"
+  bottom: "norm_14"
+  top: "pool_14"
+  param {
+    name: "p"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  holder_pool_param {
+    filler {
+      type: "constant"
+      value: 1.5
+    }
+    channel_shared: true
+    d: 1
+    fc: false
+  }
+}
+layer {
+  name: "scale_14"
+  type: "SigScale"
+  bottom: "pool_14"
+  top: "scale_14"
+  param {
+    name: "t_14"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  sig_scale_param {
+    filler {
+      type: "constant"
+      value: -1.94591014906
+    }
+    channel_shared: true
+    counterpart: false
+    fc: false
+  }
+}
+layer {
+  name: "scale_c_14"
+  type: "SigScale"
+  bottom: "fuse_2_13"
+  top: "scale_c_14"
+  param {
+    name: "t_14"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  sig_scale_param {
+    filler {
+      type: "constant"
+      value: -1.94591014906
+    }
+    channel_shared: true
+    counterpart: true
+    fc: false
+  }
+}
+layer {
+  name: "fuse_2_14"
+  type: "Eltwise"
+  bottom: "scale_14"
+  bottom: "scale_c_14"
+  top: "fuse_2_14"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "fc_15"
+  type: "Convolution"
+  bottom: "fuse_2_14"
+  top: "fc_15"
+  param {
+    #name: "fc_1"
+    lr_mult: 1
+    decay_mult: 1
+  }
+  convolution_param {
+    num_output: 64
+    kernel_size: 3
+    pad:1
+    stride: 1
+    bias_term: false
+    weight_filler {
+      type: "msra"
+      variance_norm: AVERAGE
+    }
+  }
+}
+layer {
+  name: "fuse_1_15"
+  type: "Eltwise"
+  bottom: "init_fc"
+  bottom: "fc_15"
+  top: "fuse_1_15"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "norm_15"
+  type: "ConvConjugateNorm"
+  bottom: "fuse_1_15"
+  top: "norm_15"
+  param {
+    name: "p"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  conjugate_norm_param {
+    filler {
+      type: "constant"
+      value: 1.5
+    }
+    channel_shared: true
+    fc: false
+  }
+}
+layer {
+  name: "pool_15"
+  type: "HolderPool"
+  bottom: "norm_15"
+  top: "pool_15"
+  param {
+    name: "p"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  holder_pool_param {
+    filler {
+      type: "constant"
+      value: 1.5
+    }
+    channel_shared: true
+    d: 1
+    fc: false
+  }
+}
+layer {
+  name: "scale_15"
+  type: "SigScale"
+  bottom: "pool_15"
+  top: "scale_15"
+  param {
+    name: "t_15"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  sig_scale_param {
+    filler {
+      type: "constant"
+      value: -2.01490302054
+    }
+    channel_shared: true
+    counterpart: false
+    fc: false
+  }
+}
+layer {
+  name: "scale_c_15"
+  type: "SigScale"
+  bottom: "fuse_2_14"
+  top: "scale_c_15"
+  param {
+    name: "t_15"
+    lr_mult: 0
+    decay_mult: 0
+  }
+  sig_scale_param {
+    filler {
+      type: "constant"
+      value: -2.01490302054
+    }
+    channel_shared: true
+    counterpart: true
+    fc: false
+  }
+}
+layer {
+  name: "fuse_2_15"
+  type: "Eltwise"
+  bottom: "scale_15"
+  bottom: "scale_c_15"
+  top: "fuse_2_15"
+  eltwise_param {
+    operation: SUM
+  }
+}
+layer {
+  name: "map_fc"
+  type: "Convolution"
+  bottom: "fuse_2_15"
+  top: "map_fc"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  convolution_param {
+    num_output: 1
+    kernel_size: 3
+    pad: 1
+    stride: 1
+    bias_term: false
+    weight_filler {
+      type: "msra"
+    }
+  }
+}
+
+layer {
+  name: "loss"
+  type: "EuclideanLoss"
+  bottom: "map_fc"
+  bottom: "label"
+  top: "loss"
+  loss_weight: 1
+  loss_param{
+    normalization: BATCH_SIZE
+    #normalize: false
+  }
+}
